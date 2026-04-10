@@ -111,9 +111,10 @@ const ResumeBuilder = () => {
           })),
           // ✅ BUG 5 FIX: skills from AI is string[] but SkillsForm may expect [{name}] — 
           // normalise to whatever your SkillsForm expects (adjust if needed)
-          skills: (parsedData.skills || []).map((s) =>
-            typeof s === "string" ? { name: s } : s
-          ),
+         // ✅ Keep skills as plain strings always
+skills: (parsedData.skills || []).map((s) =>
+  typeof s === "object" && s !== null ? (s.name ?? s.label ?? "") : String(s)
+),
         }));
       });
     } else {
