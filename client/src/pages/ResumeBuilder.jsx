@@ -142,7 +142,7 @@ const ResumeBuilder = () => {
       formData.append("resumeId", resumeId);
       formData.append("resumeData", JSON.stringify({ public: !resumeData.public }));
       const { data } = await api.put("/api/resumes/update", formData, {
-        headers: { Authorization: token },
+        headers: {Authorization: `Bearer ${token}`}
       });
       setResumeData({ ...resumeData, public: !resumeData.public });
       toast.success(data.message);
@@ -168,33 +168,40 @@ const ResumeBuilder = () => {
   };
 
   // ── Save ────────────────────────────────────────────────────────────────────
-  const saveResume = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("resumeId", resumeId);
-      formData.append("resumeData", JSON.stringify(resumeData));
+ const saveResume = async () => {
+  try {
+    const formData = new FormData();
 
-      const image = resumeData.personal_info.image;
-      if (image instanceof File) {
-        formData.append("image", image);
-      }
+    const cleanedData = {
+      ...resumeData,
+      skills: (resumeData.skills || []).map((s) =>
+        typeof s === "string" ? s : s.name
+      ),
+    };
 
-      const { data } = await api.put("/api/resumes/update", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    formData.append("resumeId", resumeId);
+    formData.append("resumeData", JSON.stringify(cleanedData));
 
-      setResumeData({
-        ...data.resume,
-        skills: data.resume.skills || [],
-      });
-
-      return data.message;
-    } catch (error) {
-      console.log("BACKEND ERROR:", error?.response?.data);
-      throw error;
+    const image = resumeData.personal_info.image;
+    if (image instanceof File) {
+      formData.append("image", image);
     }
-  };
 
+    const { data } = await api.put("/api/resumes/update", formData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setResumeData({
+      ...data.resume,
+      skills: data.resume.skills || [],
+    });
+
+    return data.message;
+  } catch (error) {
+    console.log("BACKEND ERROR:", error?.response?.data);
+    throw error;
+  }
+};
   return (
    <div>
   {/* Top nav */}
