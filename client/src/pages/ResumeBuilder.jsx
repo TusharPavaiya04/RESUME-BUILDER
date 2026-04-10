@@ -20,7 +20,7 @@ import PersonalInfoForm from "../Components/PersonalInfoForm";
 import ResumePreview from "../Components/ResumePreview";
 import TemplateSelector from "../Components/TemplateSelector";
 import ColorPicker from "../Components/ColorPicker";
-import ProfessionalSummyForm from "../Components/professionalSummaryForm";
+import ProfessionalSummyForm from "../Components/ProfessionalSummaryForm";
 import ExperienceForm from "../Components/ExperienceForm";
 import EducationForm from "../Components/EducationForm";
 import ProjectForm from "../Components/ProjectForm";
