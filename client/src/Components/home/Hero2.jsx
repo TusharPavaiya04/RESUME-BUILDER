@@ -145,7 +145,7 @@ const Hero = () => {
               className="flex items-center gap-2 px-8 h-12 rounded-full text-white font-semibold transition-all active:scale-95 hover:opacity-90 shadow-lg"
               style={{ background: '#2563EB', boxShadow: '0 4px 20px rgba(37,99,235,0.35)' }}
             >
-              Get started free
+              Get started 
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
               </svg>
