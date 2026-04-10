@@ -5,7 +5,6 @@ import ResumeBuilder from './pages/ResumeBuilder';
 import Preview from './pages/Preview';
 import Dashboard from './pages/Dashboard';
 import ForgotPassword from './pages/ForgotPassword';
-import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
 import VerifyOTP from './pages/VerifyOTP';
 import { useDispatch } from 'react-redux';
@@ -51,7 +50,6 @@ const App = () => {
       <Route path="builder/:resumeId" element={<ResumeBuilder/>}/>
       </Route>
       <Route path="view/:resumeId" element={<Preview/>}/>
-      <Route path='/verify-email' element={<VerifyEmail/>}/>
       <Route path="/forgot-password" element={<ForgotPassword/>}/>
       <Route path="/verify-otp/:email" element={<VerifyOTP/>}/> 
       <Route path='/reset-password/:email' element={<ResetPassword/>}/>
