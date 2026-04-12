@@ -2,6 +2,7 @@ import User from '../model/userModel.js';
 import Resume from '../model/resume.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import sendOTPEmail from '../utils/sendOtpMail.js'
 
 const generateToken=(userId)=>{
     const token=jwt.sign(
@@ -140,7 +141,6 @@ export const getUserResumes=async(req,res)=>{
     }
 }
 
-import sendOTPEmail from '../utils/sendOtpMail.js'
 
 export const forgotPassword = async (req, res) => {
   try {
