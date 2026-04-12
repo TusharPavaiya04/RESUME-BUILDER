@@ -2,7 +2,7 @@ import User from '../model/userModel.js';
 import Resume from '../model/resume.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import sendOTPEmail from '../utils/sendOtpMail.js'
+import {sendOtpMail} from '../utils/sendOtpMail.js'
 
 const generateToken=(userId)=>{
     const token=jwt.sign(
@@ -141,100 +141,88 @@ export const getUserResumes=async(req,res)=>{
     }
 }
 
-
 export const forgotPassword = async (req, res) => {
   try {
-    console.log("BODY:", req.body); // ✅ check request coming
-
     const { email } = req.body;
 
     const user = await User.findOne({ email });
-    console.log("USER:", user); // ✅ check DB result
-
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log("OTP:", otp);
+    // 🚨 prevent multiple OTP spam
+    if (user.otpExpiry && user.otpExpiry > Date.now()) {
+      return res.status(400).json({
+        message: "OTP already sent. Please wait",
+      });
+    }
 
-    user.otp = otp;
-    user.otpExpiry = Date.now() + 5 * 60 * 1000;
+    // 🔢 generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 🔐 hash OTP using bcrypt
+    const hashedOtp = await bcrypt.hash(otp, 10);
+
+    // ✅ SAVE BEFORE sending email
+    user.otp = hashedOtp;
+    user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 min
+    user.isOtpVerified = false;
 
     await user.save();
-    console.log("Saved OTP");
 
-   await sendEmail({
-    to: email,
-    subject: "OTP Verification",
-    html: `<h2>Your OTP is: ${otp}</h2>`,
-  }); // 🔥 MOST COMMON ERROR HERE
-    console.log("Email sent");
+    console.log("Saved OTP:", otp);
 
-    res.json({ message: "OTP sent successfully" });
+    // 📧 send email via :contentReference[oaicite:0]{index=0}
+    await sendOtpMail(email, otp);
+
+    res.status(200).json({
+      success: true,
+      message: "OTP sent to email",
+    });
 
   } catch (error) {
-    console.error("Forgot Password Error:", error); // 🔥 MUST SEE THIS
+    console.error("Forgot Password Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-
-
-export const verifyOTP = async (req, res) => {
+export const verifyOTP= async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    // 1. Validate input
-    if (!email || !otp) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and OTP are required",
-      });
-    }
-
-    // 2. Find user
     const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "User not found",
-      });
+    if (!user || !user.otp) {
+      return res.status(400).json({ message: "Invalid request" });
     }
 
-    // 3. Check OTP
-    if (user.otp !== otp) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid OTP",
-      });
-    }
-
-    // 4. Check expiry
+    // ⏱️ check expiry
     if (user.otpExpiry < Date.now()) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP expired",
-      });
+      return res.status(400).json({ message: "OTP expired" });
     }
 
-    // 5. Mark OTP as verified ✅
+    // 🔐 compare OTP
+    const isMatch = await bcrypt.compare(otp, user.otp);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    // ✅ mark verified
     user.isOtpVerified = true;
+    user.otp = undefined;
+    user.otpExpiry = undefined;
 
     await user.save();
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: "OTP verified successfully",
+      message: "OTP verified",
     });
 
   } catch (error) {
-    console.error("Verify OTP Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
