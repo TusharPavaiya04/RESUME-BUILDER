@@ -6,6 +6,8 @@ import Preview from './pages/Preview';
 import Dashboard from './pages/Dashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
+import CheckEmail from './pages/CheckEmail';  // add this import
 import VerifyOTP from './pages/VerifyOTP';
 import { useDispatch } from 'react-redux';
 import api from './configs/api';
@@ -53,6 +55,8 @@ const App = () => {
       <Route path="/forgot-password" element={<ForgotPassword/>}/>
       <Route path="/verify-otp/:email" element={<VerifyOTP/>}/> 
       <Route path='/reset-password/:email' element={<ResetPassword/>}/>
+      <Route path="/verify-email" element={<VerifyEmail />} />
+<Route path="/check-email" element={<CheckEmail />} />  {/* add this */}
     </Routes>
     </>
   );

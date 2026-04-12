@@ -3,6 +3,7 @@ import Resume from '../model/resume.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import {sendOtpMail} from '../utils/sendOtpMail.js'
+import {sendVerificationMail} from '../utils/verifyMail.js'
 
 const generateToken=(userId)=>{
     const token=jwt.sign(
@@ -15,98 +16,118 @@ const generateToken=(userId)=>{
 
 // controller for user registration
 // POST: /api/user/register
-export const registerUser=async(req,res)=>{
-try{
-const {name,email,password}=req.body;
+export const registerUser = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-if(!name||!email||!password){
-    return res.status(400).json({
-        message:"Missing required fields"
-    })
-}
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
 
-// check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
 
-const user=await User.findOne({email});
-if(user){
-    return  res.status(400).json({
-        message:"User already exists"
-    })
-}
+    // save user as unverified — password hashed by pre-save hook
+    const newUser = await User.create({
+      name,
+      email,
+      password,
+      isEmailVerified: false,
+    });
 
-// create new user
+    // generate JWT verify token
+    const verifyToken = jwt.sign(
+      { userId: newUser._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
-const hashedPassword=await bcrypt.hash(password,10);
-const newUser=await User.create({
-    name,email,password:hashedPassword
-}
-)
+    // send email
+    const verifyLink = `${process.env.FRONTEND_URL}/verify-email?token=${verifyToken}`;
+    await sendVerificationMail(email, verifyLink);
 
-// return success message
-const token=generateToken(newUser._id);
-newUser.password=undefined;
+    return res.status(201).json({
+      message: "Registration successful. Please check your email.",
+    });
 
-return res.status(201).json({
-    message:"User created successfully",
-    token,
-    user:newUser
-})
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+};
 
-}catch(err){
-return res.status(400).json({
-    message:err.message
-})
-}
-}
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
 
+    if (!token) {
+      return res.status(400).json({ message: "Invalid link" });
+    }
 
-// controllerll for user login
-// POST://api/user/login
+    // decode JWT
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-export const loginUser=async(req,res)=>{
-try{
-const {email,password}=req.body;
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
 
-// check if user already exists
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: "Email already verified" });
+    }
 
-const user=await User.findOne({email});
-if(!user){
-    return  res.status(400).json({
-        message:"Invalid email or password"
-    })
-}
+    // mark verified
+    user.isEmailVerified = true;
+    await user.save();
 
-// Verify password
+    return res.status(200).json({
+      success: true,
+      message: "Email verified! You can now login.",
+    });
 
-// ✅ Fix
-const isMatch = await bcrypt.compare(password, user.password);
-if (!isMatch) {
-  return res.status(400).json({
-    message: "Invalid email or password"
-  });
-}
-
-// return success message
-const token=generateToken(user._id);
-user.password=undefined;
-
-return res.status(200).json({
-    message:"Login successfully",
-    token,
-    user
-})
-
-}catch(err){
-return res.status(400).json({
-    message:err.message
-})
-}
-}
-
-
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(400).json({ message: "Verification link expired" });
+    }
+    return res.status(400).json({ message: "Invalid link" });
+  }
+};
 // controller for getting user by _id
 // GET: /api/users/data
 
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    // ✅ block if not verified
+    if (!user.isEmailVerified) {
+      return res.status(400).json({ message: "Please verify your email first" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const token = generateToken(user._id);
+    user.password = undefined;
+
+    return res.status(200).json({
+      message: "Login successfully",
+      token,
+      user,
+    });
+
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+};
 
 export const getUserById = async (req, res) => {
   try {

@@ -18,19 +18,25 @@ const Login = () => {
     password: ''
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const { data } = await api.post(`/api/users/${state}`, formData);
-      dispatch(login({ token: data.token, user: data.user || null }));
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const { data } = await api.post(`/api/users/${state}`, formData);
+
+    if (state === "register") {
+      toast.success(data.message);
+      // ✅ navigate to check email page
+      navigate(`/check-email?email=${formData.email}`);
+    } else {
+      dispatch(login({ token: data.token, user: data.user }));
       localStorage.setItem('token', data.token);
       toast.success(data.message);
       navigate('/');
-    } catch (err) {
-      toast.error(err?.response?.data?.message || err.message);
     }
-  };
-
+  } catch (err) {
+    toast.error(err?.response?.data?.message || err.message);
+  }
+};
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
