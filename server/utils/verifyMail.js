@@ -1,10 +1,17 @@
-import { Resend } from "resend";
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from 'nodemailer';
 
 export const sendVerificationMail = async (email, verifyLink) => {
   try {
-    await resend.emails.send({
-      from: process.env.EMAIL_FROM,
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
       to: email,
       subject: "Verify Your Email — Resume Builder",
       html: `
@@ -24,14 +31,13 @@ export const sendVerificationMail = async (email, verifyLink) => {
             <p style="color:#94A3B8; font-size:12px; margin-top:24px;">
               This link expires in <strong>24 hours</strong>.
             </p>
-            <p style="color:#CBD5E1; font-size:11px; margin-top:8px;">
-              If you didn't sign up, ignore this email.
-            </p>
           </div>
         </div>
       `,
     });
+
     console.log("✅ Verification email sent to:", email);
+
   } catch (error) {
     console.error("❌ Email error:", error);
     throw new Error("Verification email not sent");
