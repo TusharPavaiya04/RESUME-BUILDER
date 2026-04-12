@@ -164,7 +164,11 @@ export const forgotPassword = async (req, res) => {
     await user.save();
     console.log("Saved OTP");
 
-    await sendOTPEmail(email, otp); // 🔥 MOST COMMON ERROR HERE
+   await sendEmail({
+    to: email,
+    subject: "OTP Verification",
+    html: `<h2>Your OTP is: ${otp}</h2>`,
+  }); // 🔥 MOST COMMON ERROR HERE
     console.log("Email sent");
 
     res.json({ message: "OTP sent successfully" });
