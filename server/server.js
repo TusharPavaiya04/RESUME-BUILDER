@@ -7,14 +7,21 @@ import resumeRouter from './routes/resumeRouter.js';
 import aiRouter from './routes/aiRoutes.js';
 
 const app=express();
-const PORT=process.env.port||4000;
+const PORT=process.env.PORT||4000;
 
 // database connection
 await connectDB();
 
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+        'https://resume-builder-xkse.vercel.app/' // add your deployed frontend URL
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
-app.use(cors());
 
 app.get('/',(req,res)=>{
 res.send("Server is live........")
