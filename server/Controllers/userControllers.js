@@ -2,305 +2,238 @@ import User from '../model/userModel.js';
 import Resume from '../model/resume.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import {sendOtpMail} from '../utils/sendOtpMail.js'
-import {sendVerificationMail} from '../utils/verifyMail.js'
+import { sendOtpMail } from '../utils/sendOtpMail.js';
+import admin from '../utils/firebase.js';
 
-const generateToken=(userId)=>{
-    const token=jwt.sign(
-        {userId},
-        process.env.JWT_SECRET,
-        {expiresIn:'7d'}
-    )
-    return token;
-}
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+};
 
-// controller for user registration
 // POST: /api/user/register
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password)
       return res.status(400).json({ message: "Missing required fields" });
-    }
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
+
+    if (existingUser && existingUser.isEmailVerified)
       return res.status(400).json({ message: "User already exists" });
+
+    // Check if already in Firebase, delete and recreate if unverified
+    try {
+      const firebaseUser = await admin.auth().getUserByEmail(email);
+      if (!firebaseUser.emailVerified) {
+        await admin.auth().deleteUser(firebaseUser.uid);
+      }
+    } catch (_) {
+      // user doesn't exist in Firebase yet — that's fine
     }
 
-    // save user as unverified — password hashed by pre-save hook
-    const newUser = await User.create({
-      name,
+    // Create user in Firebase Auth
+    await admin.auth().createUser({
       email,
       password,
-      isEmailVerified: false,
+      emailVerified: false,
     });
 
-    // generate JWT verify token
-    const verifyToken = jwt.sign(
-      { userId: newUser._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    // Generate Firebase email verification link
+    const verifyLink = await admin.auth().generateEmailVerificationLink(email, {
+      url: `${process.env.FRONTEND_URL}/login?verified=true`,
+    });
 
-    // send email
-    const verifyLink = `${process.env.FRONTEND_URL}/verify-email?token=${verifyToken}`;
-    await sendVerificationMail(email, verifyLink);
+    // Save to MongoDB as unverified
+    if (!existingUser) {
+      await User.create({ name, email, password, isEmailVerified: false });
+    }
 
+    // Send email using Firebase's built-in transport via nodemailer fallback
+    // Since Render blocks nodemailer, use Firebase Trigger Email extension
+    // OR return verifyLink to frontend and let Firebase Client SDK handle it
+    // Best approach: return verifyLink and send via your own logic or Firebase extension
+
+    // For now, return the link in response (see frontend step below)
     return res.status(201).json({
-      message: "Registration successful. Please check your email.",
+      message: "Registration successful. Please verify your email.",
+      email,
+      verifyLink, // ⚠️ Only for testing — remove in production
     });
 
   } catch (err) {
-    return res.status(400).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
   }
 };
 
+// GET: /api/user/verify-email (called after Firebase redirects back)
 export const verifyEmail = async (req, res) => {
   try {
-    const { token } = req.query;
+    const { email } = req.body;
 
-    if (!token) {
-      return res.status(400).json({ message: "Invalid link" });
-    }
+    // Check Firebase if email is verified
+    const firebaseUser = await admin.auth().getUserByEmail(email);
 
-    // decode JWT
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!firebaseUser.emailVerified)
+      return res.status(400).json({ message: "Email not verified yet" });
 
-    const user = await User.findById(decoded.userId);
-    if (!user) {
+    // Mark verified in MongoDB
+    const user = await User.findOneAndUpdate(
+      { email },
+      { isEmailVerified: true },
+      { new: true }
+    );
+
+    if (!user)
       return res.status(400).json({ message: "User not found" });
-    }
 
-    if (user.isEmailVerified) {
-      return res.status(400).json({ message: "Email already verified" });
-    }
-
-    // mark verified
-    user.isEmailVerified = true;
-    await user.save();
-
-    return res.status(200).json({
-      success: true,
-      message: "Email verified! You can now login.",
-    });
+    return res.status(200).json({ success: true, message: "Email verified!" });
 
   } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      return res.status(400).json({ message: "Verification link expired" });
-    }
-    return res.status(400).json({ message: "Invalid link" });
+    return res.status(500).json({ message: err.message });
   }
 };
-// controller for getting user by _id
-// GET: /api/users/data
 
+// POST: /api/user/login
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) {
+    if (!user)
       return res.status(400).json({ message: "Invalid email or password" });
+
+    // Check Firebase for email verification status
+    const firebaseUser = await admin.auth().getUserByEmail(email);
+    if (!firebaseUser.emailVerified) {
+      return res.status(403).json({
+        message: "Please verify your email first.",
+        isVerified: false,
+        email,
+      });
     }
 
-    // ✅ block if not verified
+    // Sync MongoDB if not yet marked
     if (!user.isEmailVerified) {
-      return res.status(400).json({ message: "Please verify your email first" });
+      user.isEmailVerified = true;
+      await user.save();
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    if (!isMatch)
       return res.status(400).json({ message: "Invalid email or password" });
-    }
 
     const token = generateToken(user._id);
     user.password = undefined;
 
-    return res.status(200).json({
-      message: "Login successfully",
-      token,
-      user,
-    });
+    return res.status(200).json({ message: "Login successful", token, user });
 
   } catch (err) {
-    return res.status(400).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
   }
 };
 
+// GET: /api/user/data
 export const getUserById = async (req, res) => {
   try {
-    const userId = req.userId;
-
-    const user = await User.findById(userId).select('-password');
-
-    return res.status(200).json({
-      user   // ✅ MUST BE "user"
-    });
-
+    const user = await User.findById(req.userId).select('-password');
+    return res.status(200).json({ user });
   } catch (err) {
-    return res.status(400).json({
-      message: err.message
-    });
+    return res.status(500).json({ message: err.message });
   }
 };
-// controller for getting user resumes
-// GET: /api/users/resumes
 
-export const getUserResumes=async(req,res)=>{
-    try{
-        const userId=req.userId;
+// GET: /api/user/resumes
+export const getUserResumes = async (req, res) => {
+  try {
+    const resumes = await Resume.find({ userId: req.userId });
+    return res.status(200).json({ resumes });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
 
-        // return user resumes
-        const resumes=await Resume.find({userId});
-        return res.status(200).json({resumes})
-    }catch(err){
-        return res.status(400).json({
-            message:err.message
-        })
-    }
-}
-
+// POST: /api/user/forgot-password
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) {
+    if (!user)
       return res.status(400).json({ message: "User not found" });
-    }
 
-    // 🚨 prevent multiple OTP spam
-    if (user.otpExpiry && user.otpExpiry > Date.now()) {
-      return res.status(400).json({
-        message: "OTP already sent. Please wait",
-      });
-    }
+    if (user.otpExpiry && user.otpExpiry > Date.now())
+      return res.status(400).json({ message: "OTP already sent. Please wait." });
 
-    // 🔢 generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // 🔐 hash OTP using bcrypt
     const hashedOtp = await bcrypt.hash(otp, 10);
 
-    // ✅ SAVE BEFORE sending email
     user.otp = hashedOtp;
-    user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 min
+    user.otpExpiry = Date.now() + 5 * 60 * 1000;
     user.isOtpVerified = false;
-
     await user.save();
 
-    console.log("Saved OTP:", otp);
-
-    // 📧 send email via :contentReference[oaicite:0]{index=0}
     await sendOtpMail(email, otp);
 
-    res.status(200).json({
-      success: true,
-      message: "OTP sent to email",
-    });
+    return res.status(200).json({ success: true, message: "OTP sent to email" });
 
-  } catch (error) {
-    console.error("Forgot Password Error:", error);
-    res.status(500).json({ message: "Server error" });
+  } catch (err) {
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
-export const verifyOTP= async (req, res) => {
+// POST: /api/user/verify-otp
+export const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
     const user = await User.findOne({ email });
-
-    if (!user || !user.otp) {
+    if (!user || !user.otp)
       return res.status(400).json({ message: "Invalid request" });
-    }
 
-    // ⏱️ check expiry
-    if (user.otpExpiry < Date.now()) {
+    if (user.otpExpiry < Date.now())
       return res.status(400).json({ message: "OTP expired" });
-    }
 
-    // 🔐 compare OTP
     const isMatch = await bcrypt.compare(otp, user.otp);
-
-    if (!isMatch) {
+    if (!isMatch)
       return res.status(400).json({ message: "Invalid OTP" });
-    }
 
-    // ✅ mark verified
     user.isOtpVerified = true;
     user.otp = undefined;
     user.otpExpiry = undefined;
-
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: "OTP verified",
-    });
+    return res.status(200).json({ success: true, message: "OTP verified" });
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+  } catch (err) {
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
-// controllers/authController.js
-// controllers/authController.js
-
-
+// POST: /api/user/reset-password
 export const resetPassword = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Validate input
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required",
-      });
-    }
+    if (!email || !password)
+      return res.status(400).json({ message: "Email and password are required" });
 
-    // 2. Find user
     const user = await User.findOne({ email });
+    if (!user)
+      return res.status(400).json({ message: "User not found" });
 
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "User not found",
-      });
-    }
+    if (!user.isOtpVerified)
+      return res.status(400).json({ message: "OTP not verified" });
 
-    // 3. Check OTP verified
-    if (!user.isOtpVerified) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP not verified",
-      });
-    }
-
-    // 4. Update password (auto hashed via pre-save)
     user.password = password;
-
-    // 5. Clear OTP data
     user.otp = null;
     user.otpExpiry = null;
     user.isOtpVerified = false;
-
     await user.save();
 
-    return res.status(200).json({
-      success: true,
-      message: "Password reset successfully",
-    });
+    return res.status(200).json({ success: true, message: "Password reset successfully" });
 
-  } catch (error) {
-    console.error("Reset Password Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+  } catch (err) {
+    return res.status(500).json({ message: "Server error" });
   }
 };

@@ -1,45 +1,17 @@
-import nodemailer from 'nodemailer';
+import admin from './firebase.js';
 
-export const sendVerificationMail = async (email, verifyLink) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+export const sendVerificationMail = async (email, password) => {
+  // Create user in Firebase Auth (it will send the verification email)
+  const userRecord = await admin.auth().createUser({
+    email,
+    password,
+    emailVerified: false,
+  });
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Verify Your Email — Resume Builder",
-      html: `
-        <div style="background:#f4f4f4; padding:40px 20px; font-family:Arial, sans-serif;">
-          <div style="max-width:500px; margin:auto; background:white; padding:32px; 
-                      border-radius:12px; text-align:center;">
-            <h2 style="color:#0F172A;">Verify Your Email</h2>
-            <p style="color:#64748B; font-size:14px;">
-              Thanks for signing up! Click below to verify your email.
-            </p>
-            <a href="${verifyLink}"
-               style="display:inline-block; margin-top:16px; padding:12px 32px; 
-                      background:#2563EB; color:white; text-decoration:none; 
-                      border-radius:8px; font-weight:bold;">
-              Verify Email
-            </a>
-            <p style="color:#94A3B8; font-size:12px; margin-top:24px;">
-              This link expires in <strong>24 hours</strong>.
-            </p>
-          </div>
-        </div>
-      `,
-    });
+  // Generate email verification link
+  const verifyLink = await admin.auth().generateEmailVerificationLink(email, {
+    url: `${process.env.FRONTEND_URL}/verify-email-success`, // redirect after verification
+  });
 
-    console.log("✅ Verification email sent to:", email);
-
-  } catch (error) {
-    console.error("❌ Email error:", error);
-    throw new Error("Verification email not sent");
-  }
+  return { userRecord, verifyLink };
 };
