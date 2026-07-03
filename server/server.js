@@ -13,12 +13,12 @@ const PORT=process.env.PORT||4000;
 await connectDB();
 
 app.use(cors({
-    origin: [
-        'http://localhost:5173',
-        'https://resume-builder-xkse.vercel.app/' // add your deployed frontend URL
-    ],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://your-resume-builder-frontend.vercel.app" // your deployed frontend
+  ],
+  credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 

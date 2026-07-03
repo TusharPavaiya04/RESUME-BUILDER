@@ -1,16 +1,18 @@
 import express from 'express';
-import { verifyEmail, getUserById, getUserResumes,loginUser, registerUser,verifyOTP, forgotPassword,resetPassword } from '../Controllers/userControllers.js';
-import {protect} from '../middleware/authMiddleware.js';
-const userRouter=express.Router();
+import { registerUser, verification,resendOtp,loginUser ,logoutUser, forgotPassword, verifyOtp,verifyForgotPasswordOtp,changePassword} from '../Controllers/userControllers.js';
+import { verifyMail } from '../emailVerify/verifyMail.js';
+const router=express.Router();
 
-userRouter.post('/register',registerUser);
-userRouter.get('/data',protect,getUserById);
-userRouter.get('/resumes',protect,getUserResumes);
-userRouter.post('/forgot-password',forgotPassword);
-userRouter.post('/verify-otp',verifyOTP);
-userRouter.post("/reset-password", resetPassword);
-userRouter.get('/verify-email', verifyEmail);
+router.post('/register',registerUser);
+router.post('/verify/:token',verification);
 
-userRouter.post('/login', loginUser);
+router.post('/logout',logoutUser);
+router.post('/login',loginUser);
+router.post('/forgot-password',forgotPassword);
+router.post('/changePassword',changePassword);
+router.post('/verify-mail',verifyMail);
 
-export default userRouter;
+router.post("/verify-otp", verifyOtp);
+router.post("/resend-otp", resendOtp);
+router.post("/verify-forgot-otp", verifyForgotPasswordOtp);
+export default router;

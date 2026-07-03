@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 const connectDB=async()=>{
     try{
-        let mongodbUri=process.env.MONGODB_URI;
+        let mongodbUri=process.env.MONGO_URI;
         const projectName='resume-builder';
         if(!mongodbUri){
             throw new Error("MONGODB_URI environment vairable not set")
