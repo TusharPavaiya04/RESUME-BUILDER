@@ -11,6 +11,8 @@ const UserSchema = new mongoose.Schema(
       token:{type:String,default:null},
     isOtpVerified: { type: Boolean, default: false },
     isEmailVerified: { type: Boolean, default: false },
+    resetPasswordAllowed: { type: Boolean, default: false },
+isLoggedIn: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
