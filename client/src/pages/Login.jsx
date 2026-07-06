@@ -13,7 +13,7 @@ const Login = () => {
   const urlStates = query.get('state');
   const [state, setState] = React.useState(urlStates || "login");
   const [formData, setFormData] = React.useState({
-    username: '',
+    name: '',
     email: '',
     password: ''
   });
@@ -64,10 +64,10 @@ const Login = () => {
             <User2Icon size={16} color='#2563EB' />
             <input
               type="text"
-              name="username"
-              placeholder="Username"
+              name="name"
+              placeholder="name"
               className={inputClass}
-              value={formData.username}
+              value={formData.name}
               onChange={handleChange}
               required
             />
