@@ -47,7 +47,7 @@ await newUser.save();
 
 console.log("Before sending mail");
 
-await verifyMail2(token, email);
+await verifyMail(token, email);
 
 console.log("After sending mail");
 
