@@ -57,6 +57,7 @@ const App = () => {
       <Route path="/verify-otp/:email" element={<VerifyOTP/>}/> 
       <Route path='/reset-password/:email' element={<ResetPassword/>}/>
       <Route path="/verify-email" element={<VerifyEmail />} />
+      
 <Route path="/check-email" element={<CheckEmail />} />  {/* add this */}
     </Routes>
     </>
