@@ -5,12 +5,11 @@ const router=express.Router();
 
 router.post('/register',registerUser);
 router.post('/verify/:token',verification);
-
 router.post('/logout',logoutUser);
 router.post('/login',loginUser);
 router.post('/forgot-password',forgotPassword);
 router.post('/changePassword',changePassword);
-router.post('/verify-mail',verifyMail);
+router.get('/verify-email', verification);
 
 router.post("/verify-otp", verifyOtp);
 router.post("/resend-otp", resendOtp);

@@ -74,7 +74,7 @@ export const registerUser = async (req, res) => {
 
 export const verification = async (req, res) => {
     try {
-        const { token } = req.params; // ✅ params not body
+        const { token } = req.query;
 
         console.log("token:", token);
 
