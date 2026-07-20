@@ -12,7 +12,7 @@ const VerifyOTP = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await api.post('/api/users/verify-otp', { email, otp });
+      const { data } = await api.post('/api/users/verify-forgot-otp', { email, otp });
       toast.success(data.message);
       navigate(`/reset-password/${email}`);
     } catch (err) {
