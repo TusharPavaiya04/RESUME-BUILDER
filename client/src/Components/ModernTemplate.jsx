@@ -7,17 +7,13 @@ const ModernTemplate = ({ data, accentColor }) => {
     <div className="flex min-h-[1122px] font-sans">
       
       {/* Sidebar */}
-      <div
-        className="w-1/3 p-6 text-white flex flex-col items-center"
-        style={{ backgroundColor: accentColor || "#2563eb" }}
-      >
-        {/* Initials avatar */}
-        <div className="w-28 h-28 rounded-full bg-white text-blue-600 flex items-center justify-center text-3xl font-bold mb-4">
-          {p.full_name?.charAt(0) || "?"}
-        </div>
-
-        <h1 className="text-2xl font-bold text-center">{p.full_name}</h1>
-        <p className="mb-4 text-center">{p.profession}</p>
+     <div
+  className="w-1/3 p-6 text-white flex flex-col items-center"
+  style={{ backgroundColor: accentColor || "#2563eb" }}
+>
+  <h1 className="text-2xl font-bold text-center">{p.full_name}</h1>
+  <p className="mb-4 text-center">{p.profession}</p>
+  {/* rest unchanged */}
 
         {/* Contact */}
         <div className="w-full">
