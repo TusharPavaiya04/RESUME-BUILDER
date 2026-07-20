@@ -437,3 +437,38 @@ export const verifyForgotPasswordOtp = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+// POST /user/reset-password
+export const resetPassword = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ success: false, message: "Email and new password are required" });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+        }
+
+        const user = await userModel.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        if (!user.resetPasswordAllowed) {
+            return res.status(403).json({ success: false, message: "OTP verification required before resetting password" });
+        }
+
+        // Do NOT hash here — the pre('save') hook on the schema hashes it automatically
+        user.password = password;
+        user.resetPasswordAllowed = false; // single-use
+        await user.save();
+
+        return res.status(200).json({ success: true, message: "Password reset successfully. You can now login." });
+
+    } catch (err) {
+        console.log("resetPassword ERROR:", err);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};

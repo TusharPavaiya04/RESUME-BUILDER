@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, verification,resendOtp,loginUser ,logoutUser, forgotPassword, verifyOtp,verifyForgotPasswordOtp,changePassword} from '../Controllers/userControllers.js';
+import { registerUser, verification,resendOtp,loginUser ,logoutUser, forgotPassword, verifyOtp,verifyForgotPasswordOtp,changePassword,resetPassword} from '../Controllers/userControllers.js';
 import { verifyMail } from '../emailVerify/verifyMail.js';
 const router=express.Router();
 
@@ -13,5 +13,7 @@ router.get('/verify-email', verification);
 
 router.post("/verify-otp", verifyOtp);
 router.post("/resend-otp", resendOtp);
+
+router.post('/reset-password', resetPassword);
 router.post("/verify-forgot-otp", verifyForgotPasswordOtp);
 export default router;
