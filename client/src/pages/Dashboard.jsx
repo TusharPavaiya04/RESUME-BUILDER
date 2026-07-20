@@ -20,7 +20,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const loadAllResumes = async () => {
    try{
- const { data } = await api.get('/api/users/resumes',{ headers: { Authorization: token } })
+ const { data } = await api.get('/api/users/resumes',{ headers: { Authorization: `Bearer ${token}` } })
  setAllResumes(data.resumes)
    }catch(err){
       toast.error(err?.response?.data?.message || err.message)
@@ -32,7 +32,7 @@ const Dashboard = () => {
   const createResume = async (e) => {
     try {
       e.preventDefault();
-      const { data } = await api.post('/api/resumes/create', { title }, { headers: { Authorization: token } })
+      const { data } = await api.post('/api/resumes/create', { title }, { headers: { Authorization: `Bearer ${token}` } })
       setAllResumes([...allResumes, data.resume])
       setTitle('')
       setShowCreateResume(false);
@@ -100,7 +100,7 @@ const uploadResume = async (e) => {
   const editTitle = async (event) => {
     try{
       event.preventDefault();
-        const { data } = await api.put(`/api/resumes/update`, {resumeId:editResumeId,resumeData:{title}},{ headers: { Authorization: token } })
+        const { data } = await api.put(`/api/resumes/update`, {resumeId:editResumeId,resumeData:{title}},{ headers: { Authorization: `Bearer ${token}` } })
   setAllResumes(allResumes.map(resume =>
   resume._id === editResumeId ? { ...resume, title } : resume
 ));
@@ -118,7 +118,7 @@ const uploadResume = async (e) => {
 
       const confirm = window.confirm('Are you sure you want to delete this resume?')
       if (confirm) {
-        const { data } = await api.delete(`/api/resumes/delete/${resumeId}`, { headers: { Authorization: token } })
+        const { data } = await api.delete(`/api/resumes/delete/${resumeId}`, { headers: { Authorization: `Bearer ${token}` } })
         setAllResumes(allResumes.filter(resume=>resume._id!==resumeId))
         toast.success(data.message);
       }
