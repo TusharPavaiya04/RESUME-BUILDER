@@ -104,6 +104,8 @@ return res.status(400).json({
 
 // controller for updating a resume
 // Put /api/resumes/updatedAt
+// controller for updating a resume
+// PUT /api/resumes/update
 export const updateResume = async (req, res) => {
   try {
     const userId = req.userId;
@@ -138,23 +140,23 @@ export const updateResume = async (req, res) => {
             ? JSON.parse(req.body.resumeData)
             : req.body.resumeData;
 
-     // 🔥 SAFE PARSING FUNCTION
-const safeParseArray = (field) => {
-  try {
-    if (!field) return [];
-    if (Array.isArray(field)) return field;
-    if (typeof field === "string") return JSON.parse(field);
-    return [];
-  } catch {
-    return [];
-  }
-};
+        // 🔥 SAFE PARSING FUNCTION
+        const safeParseArray = (field) => {
+          try {
+            if (!field) return [];
+            if (Array.isArray(field)) return field;
+            if (typeof field === "string") return JSON.parse(field);
+            return [];
+          } catch {
+            return [];
+          }
+        };
 
-// ✅ FIX ALL ARRAYS SAFELY
-resumeDataCopy.projects = safeParseArray(resumeDataCopy.projects);
-resumeDataCopy.experience = safeParseArray(resumeDataCopy.experience);
-resumeDataCopy.education = safeParseArray(resumeDataCopy.education);
-resumeDataCopy.skills = safeParseArray(resumeDataCopy.skills);
+        // ✅ FIX ALL ARRAYS SAFELY
+        resumeDataCopy.projects = safeParseArray(resumeDataCopy.projects);
+        resumeDataCopy.experience = safeParseArray(resumeDataCopy.experience);
+        resumeDataCopy.education = safeParseArray(resumeDataCopy.education);
+        resumeDataCopy.skills = safeParseArray(resumeDataCopy.skills);
       } else {
         throw new Error("resumeData missing");
       }
@@ -172,33 +174,6 @@ resumeDataCopy.skills = safeParseArray(resumeDataCopy.skills);
     // ✅ Ensure skills always exist
     if (!Array.isArray(resumeDataCopy.skills)) {
       resumeDataCopy.skills = [];
-    }
-
-    const image = req.file;
-
-    // ✅ HANDLE IMAGE UPLOAD (SAFE + FIXED)
-    if (image && image.buffer) {
-      try {
-        const uploaded = await imageKit.files.upload({
-          file: image.buffer.toString("base64"), // 🔥 IMPORTANT FIX
-          fileName: image.originalname || "resume.png",
-          folder: "user-resumes",
-        });
-
-        resumeDataCopy.personal_info.image =
-          uploaded.url + "?t=" + Date.now();
-
-      } catch (err) {
-        console.error("ImageKit Upload Error:", err.message);
-
-        // fallback to old image
-        resumeDataCopy.personal_info.image =
-          existingResume.personal_info.image || "";
-      }
-    } else {
-      // ✅ No new image → keep old one
-      resumeDataCopy.personal_info.image =
-        existingResume.personal_info.image || "";
     }
 
     // ✅ FINAL UPDATE
