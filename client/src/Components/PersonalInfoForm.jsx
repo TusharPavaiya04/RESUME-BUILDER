@@ -29,38 +29,6 @@ const PersonalInfoForm = ({ data, onChange }) => {
         </p>
       </div>
 
-      {/* IMAGE */}
-      <div className="flex items-center gap-4">
-        <label className="cursor-pointer">
-          {data.image ? (
-            <img
-              src={
-                typeof data.image === "string"
-                  ? data.image
-                  : URL.createObjectURL(data.image)
-              }
-              alt="profile"
-              className="w-16 h-16 rounded-full object-cover border"
-            />
-          ) : (
-            <div className="w-16 h-16 flex items-center justify-center border rounded-full text-gray-400">
-              <User className="size-6" />
-            </div>
-          )}
-
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => handleChange("image", e.target.files[0])}
-          />
-        </label>
-
-        <p className="text-xs text-gray-500">
-          Click to upload profile photo
-        </p>
-      </div>
-
       {/* INPUTS */}
       <div className="space-y-4">
         {fields.map((field) => {
