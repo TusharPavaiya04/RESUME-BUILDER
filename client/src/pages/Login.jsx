@@ -28,8 +28,8 @@ const Login = () => {
       // ✅ navigate to check email page
       navigate(`/check-email?email=${formData.email}`);
     } else {
-      dispatch(login({ token: data.token, user: data.user }));
-      localStorage.setItem('token', data.token);
+      dispatch(login({ token: data.accessToken, user: data.user }));
+      localStorage.setItem('token', data.accessToken);
       toast.success(data.message);
       navigate('/');
     }
