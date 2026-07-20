@@ -1,7 +1,6 @@
 import React from "react";
 
-const 
-SidebarTemplate = ({ data, accentColor }) => {
+const SidebarTemplate = ({ data, accentColor }) => {
   const p = data.personal_info || {};
 
   return (
@@ -12,18 +11,6 @@ SidebarTemplate = ({ data, accentColor }) => {
         className="w-1/3 p-6 text-white"
         style={{ backgroundColor: accentColor || "#2563eb" }}
       >
-        {/* Profile */}
-        {p.image && (
-          <img
-            src={
-              typeof p.image === "string"
-                ? p.image
-                : URL.createObjectURL(p.image)
-            }
-            className="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-4 border-white"
-          />
-        )}
-
         <h1 className="text-xl font-bold text-center">{p.full_name}</h1>
         <p className="text-center text-sm mb-4">{p.profession}</p>
 

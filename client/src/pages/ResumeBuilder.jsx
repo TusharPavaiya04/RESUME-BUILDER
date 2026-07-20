@@ -137,21 +137,24 @@ skills: (parsedData.skills || []).map((s) =>
   const activeSection = sections[activeSectionIndex];
 
   // ── Visibility toggle ───────────────────────────────────────────────────────
-  const changeResumeVisibility = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("resumeId", resumeId);
-      formData.append("resumeData", JSON.stringify({ public: !resumeData.public }));
-      const { data } = await api.put("/api/resumes/update", formData, {
-        headers: {Authorization: `Bearer ${token}`}
-      });
-      setResumeData({ ...resumeData, public: !resumeData.public });
-      toast.success(data.message);
-    } catch (error) {
-      console.error("Error toggling visibility:", error);
-    }
-  };
-
+ const changeResumeVisibility = async () => {
+  try {
+    const { data } = await api.put(
+      "/api/resumes/update",
+      {
+        resumeId,
+        resumeData: { public: !resumeData.public },
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    setResumeData({ ...resumeData, public: !resumeData.public });
+    toast.success(data.message);
+  } catch (error) {
+    console.error("Error toggling visibility:", error);
+  }
+};
   // ── Share ───────────────────────────────────────────────────────────────────
   const handleShare = () => {
     const frontendUrl = window.location.href.split("/app/")[0];
@@ -171,8 +174,6 @@ skills: (parsedData.skills || []).map((s) =>
   // ── Save ────────────────────────────────────────────────────────────────────
  const saveResume = async () => {
   try {
-    const formData = new FormData();
-
     const cleanedData = {
       ...resumeData,
       skills: (resumeData.skills || []).map((s) =>
@@ -180,17 +181,16 @@ skills: (parsedData.skills || []).map((s) =>
       ),
     };
 
-    formData.append("resumeId", resumeId);
-    formData.append("resumeData", JSON.stringify(cleanedData));
-
-    const image = resumeData.personal_info.image;
-    if (image instanceof File) {
-      formData.append("image", image);
-    }
-
-    const { data } = await api.put("/api/resumes/update", formData, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const { data } = await api.put(
+      "/api/resumes/update",
+      {
+        resumeId,
+        resumeData: cleanedData,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     setResumeData({
       ...data.resume,
