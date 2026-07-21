@@ -19,15 +19,13 @@ const Dashboard = () => {
 
   const navigate = useNavigate();
   const loadAllResumes = async () => {
-   try{
- const { data } = await api.get('/api/users/resumes',{ headers: { Authorization: `Bearer ${token}` } })
- setAllResumes(data.resumes)
-   }catch(err){
-      toast.error(err?.response?.data?.message || err.message)
-
-   }
- 
+  try {
+    const { data } = await api.get('/api/resumes', { headers: { Authorization: `Bearer ${token}` } })
+    setAllResumes(data.resumes)
+  } catch (err) {
+    toast.error(err?.response?.data?.message || err.message)
   }
+}
 
   const createResume = async (e) => {
     try {
