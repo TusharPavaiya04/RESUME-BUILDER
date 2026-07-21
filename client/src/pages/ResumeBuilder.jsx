@@ -137,19 +137,17 @@ skills: (parsedData.skills || []).map((s) =>
   const activeSection = sections[activeSectionIndex];
 
   // ── Visibility toggle ───────────────────────────────────────────────────────
- const changeResumeVisibility = async () => {
+const changeResumeVisibility = async () => {
   try {
     const { data } = await api.put(
       "/api/resumes/update",
       {
         resumeId,
-        resumeData: { public: !resumeData.public },
+        resumeData: { ...resumeData, public: !resumeData.public }, // send everything
       },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-    setResumeData({ ...resumeData, public: !resumeData.public });
+    setResumeData(data.resume);
     toast.success(data.message);
   } catch (error) {
     console.error("Error toggling visibility:", error);
