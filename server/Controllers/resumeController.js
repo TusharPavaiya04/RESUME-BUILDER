@@ -212,3 +212,17 @@ export const updateResume = async (req, res) => {
     });
   }
 };
+
+// get all resumes for logged-in user
+// GET: /api/resumes/
+export const getAllResumes = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const resumes = await Resume.find({ userId }).sort({ updatedAt: -1 });
+    return res.status(200).json({ resumes });
+  } catch (err) {
+    return res.status(400).json({
+      message: err.message,
+    });
+  }
+};
