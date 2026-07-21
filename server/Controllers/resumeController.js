@@ -102,6 +102,7 @@ return res.status(400).json({
 }
 
 
+
 // controller for updating a resume
 // Put /api/resumes/updatedAt
 // controller for updating a resume
@@ -177,24 +178,26 @@ export const updateResume = async (req, res) => {
     }
 
     // ✅ FINAL UPDATE
-    const resume = await Resume.findOneAndUpdate(
-      { _id: resumeId, userId },
-      {
-        $set: {
-          title: resumeDataCopy.title,
-          personal_info: resumeDataCopy.personal_info,
-          professional_summary: resumeDataCopy.professional_summary,
-          experience: resumeDataCopy.experience,
-          education: resumeDataCopy.education,
-          projects: resumeDataCopy.projects,
-          skills: resumeDataCopy.skills,
-          template: resumeDataCopy.template,
-          accent_color: resumeDataCopy.accent_color,
-          public: resumeDataCopy.public,
-        },
-      },
-      { returnDocument: "after" }
-    );
+   const resume = await Resume.findOneAndUpdate(
+  { _id: resumeId, userId },
+  {
+    $set: {
+      title: resumeDataCopy.title ?? existingResume.title,
+      personal_info: resumeDataCopy.personal_info?.full_name
+        ? resumeDataCopy.personal_info
+        : existingResume.personal_info,
+      professional_summary: resumeDataCopy.professional_summary ?? existingResume.professional_summary,
+      experience: resumeDataCopy.experience?.length ? resumeDataCopy.experience : existingResume.experience,
+      education: resumeDataCopy.education?.length ? resumeDataCopy.education : existingResume.education,
+      projects: resumeDataCopy.projects?.length ? resumeDataCopy.projects : existingResume.projects,
+      skills: resumeDataCopy.skills?.length ? resumeDataCopy.skills : existingResume.skills,
+      template: resumeDataCopy.template ?? existingResume.template,
+      accent_color: resumeDataCopy.accent_color ?? existingResume.accent_color,
+      public: resumeDataCopy.public ?? existingResume.public,
+    },
+  },
+  { returnDocument: "after" }
+);
 
     return res.status(200).json({
       message: "Saved successfully",
