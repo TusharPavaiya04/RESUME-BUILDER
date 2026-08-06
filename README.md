@@ -15,6 +15,16 @@ A full-stack MERN Resume Builder that allows users to create professional resume
   
 ---
 
+## 🧪 Demo Account
+
+> **Note:** This project uses the Resend Email API for email verification. Due to the free-tier limitations of Resend, new user registrations may not receive verification emails. To explore the application, please use the demo account below.
+
+**Email:** resumebuilder.demo04@gmail.com
+
+**Password:** 123456
+
+---
+
 # ✨ Features
 
 - 🔐 JWT Authentication
