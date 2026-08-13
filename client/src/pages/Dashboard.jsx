@@ -134,7 +134,7 @@ const uploadResume = async (e) => {
   <div className='max-w-7xl mx-auto px-4 py-8'>
 
     <p className='text-2xl font-medium mb-6 text-[#0F172A] sm:hidden'>
-      Welcome {user.name}
+      Resume Dashboard
     </p>
 
     <div className='flex gap-4'>
