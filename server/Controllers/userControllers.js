@@ -133,6 +133,9 @@ export const verification = async (req, res) => {
     }
 };
 
+
+
+
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -181,6 +184,7 @@ export const loginUser = async (req, res) => {
                 expiresIn: "7d"
             }
         );
+        
         user.isLoggedIn = true;
         user.token = token;
         await user.save();
