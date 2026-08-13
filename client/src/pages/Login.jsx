@@ -30,7 +30,6 @@ const Login = () => {
     } else {
       dispatch(login({ token: data.accessToken, user: data.user }));
       localStorage.setItem('token', data.accessToken);
-      toast.success(data.message);
       navigate('/');
     }
   } catch (err) {
