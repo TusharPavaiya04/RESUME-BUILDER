@@ -24,7 +24,7 @@ const Navbar = () => {
         {/* Right Section */}
         <div className="flex items-center gap-4 text-sm">
           <p className="max-sm:hidden text-[#0F172A]/70">
-             <span className="font-medium text-[#0F172A]"> Hi, {user?.name}</span>
+             <span className="font-medium text-[#0F172A]">  Welcome back!</span>
           </p>
 
           <button
