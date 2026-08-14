@@ -115,7 +115,8 @@ RESUME-BUILDER
 # 📸 Screenshots
 
 ## Home Page
-<img width="1919" height="984" alt="image" src="https://github.com/user-attachments/assets/f6448d63-2f9e-4fa1-9000-5c5db9cfa079" />
+<img width="1919" height="977" alt="image" src="https://github.com/user-attachments/assets/6a887b25-f040-4317-a4ef-8f5d9cc7f765" />
+
 
 ---
 
