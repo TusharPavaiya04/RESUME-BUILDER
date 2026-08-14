@@ -5,7 +5,8 @@ A full-stack MERN Resume Builder that allows users to create professional resume
 ---
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/f6448d63-2f9e-4fa1-9000-5c5db9cfa079" width="900" alt="Resume Builder">
+ <img width="1919" height="977" alt="image" src="https://github.com/user-attachments/assets/1be26b24-a248-42fd-a343-2737bca74d7b" />
+
 </p>
 
 ## 🌐 Live Demo
